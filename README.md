@@ -1,5 +1,3 @@
-
-````markdown
 # 🔮 Qwen-1.8B LoRA 智能助手
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
@@ -24,13 +22,13 @@
 ```text
 NVIDIA GPU ≥ RTX 3090 (24GB VRAM)
 CUDA 11.8 • Ubuntu 20.04+
-````
+FLVCKOI
 
 ### 三步部署
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/yourusername/qwen-lora-chat
+git clone https://github.com/FLVCKOI/qwen-lora-chat
 
 # 2. 安装依赖（建议使用虚拟环境）
 pip install -r requirements.txt
