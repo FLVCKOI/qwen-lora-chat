@@ -1,6 +1,3 @@
-当然可以！下面是你提供的 HTML 页面内容转换成的 **Markdown (`README.md`)** 格式，结构、样式和内容全部保留，适合直接用于 GitHub 仓库首页展示：
-
----
 
 ````markdown
 # 🔮 Qwen-1.8B LoRA 智能助手
