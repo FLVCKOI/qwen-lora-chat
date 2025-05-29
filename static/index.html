@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>Qwen LoRA 聊天机器人</title>
+  <style>
+    body {
+      background: #f5f8fa;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      max-width: 700px;
+      margin: 30px auto;
+      padding: 0 15px;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      height: 90vh;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #222;
+    }
+    #chatbox {
+      flex-grow: 1;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgb(0 0 0 / 0.1);
+      padding: 15px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+    }
+    .msg {
+      padding: 10px 15px;
+      margin: 8px 0;
+      border-radius: 20px;
+      max-width: 80%;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+    .user {
+      background: #d0ebff;
+      color: #004085;
+      align-self: flex-end;
+      border-bottom-right-radius: 0;
+    }
+    .bot {
+      background: #e2e3e5;
+      color: #41464b;
+      align-self: flex-start;
+      border-bottom-left-radius: 0;
+      white-space: pre-wrap;
+    }
+    textarea {
+      width: 100%;
+      height: 70px;
+      resize: none;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+    button {
+      margin-top: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h2>Qwen LoRA 聊天机器人</h2>
+  <div id="chatbox"></div>
+  <textarea id="prompt" placeholder="请输入你的问题..." autofocus></textarea>
+  <button onclick="sendPrompt()">发送</button>
+
+  <script>
+    // 聊天上下文，存储用户和机器人对话
+    const chatHistory = [];
+
+    async function sendPrompt() {
+      const promptInput = document.getElementById('prompt');
+      const prompt = promptInput.value.trim();
+      if (!prompt) return;
+
+      // 添加用户消息到聊天框和上下文
+      appendMessage('user', prompt);
+      chatHistory.push({role: "user", content: prompt});
+
+      // 禁用输入框和按钮，防止重复发送
+      promptInput.value = "正在生成回复，请稍候...";
+      promptInput.disabled = true;
+      document.querySelector('button').disabled = true;
+
+      // 拼接上下文字符串发送给后端
+      // 格式示例：<|im_start|>user\n内容<|im_end|>\n<|im_start|>assistant\n回复<|im_end|>\n
+      // 这里简单串联上下文，方便后端理解多轮对话
+      let contextStr = "";
+      for (const msg of chatHistory) {
+        if (msg.role === "user") {
+          contextStr += `<|im_start|>user\n${msg.content}<|im_end|>\n`;
+        } else {
+          contextStr += `<|im_start|>assistant\n${msg.content}<|im_end|>\n`;
+        }
+      }
+      // 末尾加上 assistant prompt 作为生成起点
+      contextStr += `<|im_start|>assistant\n`;
+
+      // 调用后端接口生成回复
+      try {
+        const res = await fetch('/generate', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({prompt: contextStr})
+        });
+        const data = await res.json();
+        let answer = data.response;
+
+        // 只取 assistant 的回答部分（去除上下文前缀）
+        // 因为返回是整个上下文加新生成文本，去掉上下文部分，提取新内容
+        if (answer.startsWith(contextStr)) {
+          answer = answer.slice(contextStr.length).trim();
+        }
+        appendMessage('bot', answer);
+        chatHistory.push({role: "assistant", content: answer});
+      } catch (e) {
+        appendMessage('bot', "出错了，请稍后重试。");
+      }
+
+      promptInput.value = "";
+      promptInput.disabled = false;
+      document.querySelector('button').disabled = false;
+      promptInput.focus();
+
+      // 滚动到底部
+      const chatbox = document.getElementById('chatbox');
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    function appendMessage(role, text) {
+      const chatbox = document.getElementById('chatbox');
+      const div = document.createElement('div');
+      div.className = 'msg ' + role;
+      div.innerHTML = text.replace(/\n/g, "<br>");
+      chatbox.appendChild(div);
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+  </script>
+</body>
+</html>

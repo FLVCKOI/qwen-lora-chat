@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+torch
+transformers
+accelerate
+einops
+transformers_stream_generator
+peft
